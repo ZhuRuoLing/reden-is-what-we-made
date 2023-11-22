@@ -216,7 +216,6 @@ public abstract class MixinServerWorld extends World implements WorldData.WorldD
             profiler.swap("blockEvents");
             this.processSyncedBlockEvents();
             // Reden start
-            // todo: this may cause bug
             getRedenWorldData().blockEventsRootStage = new BlockEventsRootStage(((BlockEventsRootStage) stage).get_parent());
             if (!syncedBlockEventQueue.isEmpty()) {
                 Reden.LOGGER.error("Error: added new block event during processing.");

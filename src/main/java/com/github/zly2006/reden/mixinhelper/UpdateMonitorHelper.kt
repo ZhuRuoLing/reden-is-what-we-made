@@ -127,7 +127,7 @@ object UpdateMonitorHelper {
     fun monitorSetBlock(world: ServerWorld, pos: BlockPos, blockState: BlockState) {
         debugLogger("id ${recording?.id ?: 0}: set$pos, ${world.getBlockState(pos)} -> $blockState")
         recording?.data?.computeIfAbsent(pos.asLong()) {
-            recording!!.fromWorld(world, pos, true)
+            recording!!.fromWorld(world, pos, blockState, true)
         }
         if (isClient && recording != null && !recording!!.notified && !suggestedUndo) {
             suggestedUndo = true

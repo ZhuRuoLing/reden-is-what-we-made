@@ -41,9 +41,10 @@ class PlayerData(
 
     data class Entry(
         val state: BlockState,
+        val condition: BlockState?,
         val blockEntity: NbtCompound?,
     ) {
-        fun getMemorySize() = blockEntity?.sizeInBytes ?: 0
+        fun getMemorySize() = (blockEntity?.sizeInBytes ?: 0) + 24
     }
     internal interface PlayerDataAccess {
         fun getRedenPlayerData(): PlayerData
@@ -71,10 +72,10 @@ ${entities.map { "${it.key} = ${it.value}" }.joinToString("\n")}
 ${data.map { "${BlockPos.fromLong(it.key).toShortString()} = ${it.value.state}" }.joinToString("\n")}
             """.trimIndent()
         }
-        fun fromWorld(world: World, pos: BlockPos, putNearByEntities: Boolean): Entry {
+        fun fromWorld(world: World, pos: BlockPos, stateToBe: BlockState?, putNearByEntities: Boolean): Entry {
             val be = world.getBlockEntity(pos)
             val state = world.getBlockState(pos)
-            return Entry(state, be?.createNbtWithId()).apply {
+            return Entry(state, stateToBe, be?.createNbtWithId()).apply {
                 if (putNearByEntities &&
                     world.getBlockState(pos).getCollisionShape(world, pos).boundingBoxes.size != 0
                 ) {

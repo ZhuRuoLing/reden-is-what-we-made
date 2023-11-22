@@ -37,7 +37,12 @@ class Undo(
         private fun operate(world: ServerWorld, record: PlayerData.UndoRedoRecord, redoRecord: PlayerData.RedoRecord?) {
             record.data.forEach { (posLong, entry) ->
                 val pos = BlockPos.fromLong(posLong)
-                debugLogger("undo ${BlockPos.fromLong(posLong)}, ${entry.state}")
+                val stateBeforeOperate = world.getBlockState(pos)
+                if (stateBeforeOperate != entry.condition && !stateBeforeOperate.isReplaceable) {
+                    debugLogger("undo skipping ${pos.toShortString()} because ${world.getBlockState(pos)} mismatched condition ${entry.condition}")
+                    return@forEach
+                }
+                debugLogger("undo ${pos.toShortString()} to ${entry.state}")
                 // set block
                 world.setBlockNoPP(pos, entry.state, Block.NOTIFY_LISTENERS)
                 // clear schedules
@@ -127,10 +132,11 @@ class Undo(
                                     lastChangedTick = -1,
                                     undoRecord = undoRecord
                                 ).apply {
-                                    data.putAll(undoRecord.data.keys.associateWith { posLong ->
+                                    data.putAll(undoRecord.data.mapValues { (posLong, entry) ->
                                         this.fromWorld( // add entity info to this redo record
                                             player.world,
                                             BlockPos.fromLong(posLong),
+                                            entry.state,
                                             true
                                         )
                                     })
