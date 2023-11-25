@@ -39,7 +39,7 @@ public class MixinPlayer {
     )
     private void afterAttack(Entity target, CallbackInfo ci) {
         if (RedenCarpetSettings.Options.undoEntities) {
-            UpdateMonitorHelper.playerStopRecording(networkHandler.player);
+            UpdateMonitorHelper.playerStopRecording();
         }
     }
 }

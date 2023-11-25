@@ -30,7 +30,7 @@ public class MixinSchedule {
     private <T> void onRunSchedule(BiConsumer<BlockPos, T> ticker, CallbackInfo ci, OrderedTick orderedTick) {
         if (RedenCarpetSettings.Options.undoScheduledTicks) {
             long undoId = ((UndoableAccess) orderedTick).getUndoId();
-            UpdateMonitorHelper.pushRecord(undoId, () -> "scheduled tick/" + orderedTick.pos().toShortString());
+            UpdateMonitorHelper.playerStartRecording(undoId, () -> "scheduled tick/" + orderedTick.pos().toShortString());
         }
     }
     @Inject(
@@ -44,7 +44,7 @@ public class MixinSchedule {
     )
     private void afterRunSchedule(BiConsumer<BlockPos, ?> ticker, CallbackInfo ci, OrderedTick orderedTick) {
         if (RedenCarpetSettings.Options.undoScheduledTicks) {
-            UpdateMonitorHelper.popRecord(() -> "scheduled tick/" + orderedTick.pos().toShortString());
+            UpdateMonitorHelper.playerStopRecording();
         }
     }
     @Inject(

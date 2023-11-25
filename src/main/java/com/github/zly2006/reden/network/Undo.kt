@@ -112,7 +112,7 @@ class Undo(
                     sendStatus(16)
                     return@registerGlobalReceiver
                 }
-                UpdateMonitorHelper.playerStopRecording(player)
+                UpdateMonitorHelper.playerStopRecording()
                 if (UpdateMonitorHelper.recording != null) {
                     Reden.LOGGER.error("Undo when a record is still active, id=" + UpdateMonitorHelper.recording?.id)
                     // 不取消跟踪会导致undo的更改也被记录，边读边写异常
@@ -127,7 +127,8 @@ class Undo(
                                 PlayerData.RedoRecord(
                                     id = undoRecord.id,
                                     lastChangedTick = -1,
-                                    undoRecord = undoRecord
+                                    undoRecord = undoRecord,
+                                    player = player
                                 ).apply {
                                     data.putAll(undoRecord.data.keys.associateWith { posLong ->
                                         this.fromWorld( // add entity info to this redo record

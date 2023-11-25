@@ -87,6 +87,10 @@ object UpdateMonitorHelper {
     private var recordId = 20060210L
     val undoRecordsMap: MutableMap<Long, PlayerData.UndoRecord> = HashMap()
     internal val undoRecords = mutableListOf<UndoRecordEntry>()
+
+    /**
+     * Note: instant changes only
+     */
     @JvmStatic
     fun pushRecord(id: Long, reasonSupplier: () -> String): Boolean {
         val reason = if (isDebug) reasonSupplier() else ""
@@ -155,7 +159,8 @@ object UpdateMonitorHelper {
      * 此缓存可能在没有确认的情况下不经检查直接调用
      */
     private fun addRecord(
-        cause: PlayerData.UndoRecord.Cause
+        cause: PlayerData.UndoRecord.Cause,
+        player: ServerPlayerEntity
     ): PlayerData.UndoRecord {
         if (undoRecords.size != 0) {
             throw IllegalStateException("Cannot add record when there is already one.")
@@ -163,7 +168,8 @@ object UpdateMonitorHelper {
         val undoRecord = PlayerData.UndoRecord(
             id = recordId,
             lastChangedTick = server.ticks,
-            cause = cause
+            cause = cause,
+            player = player
         )
         undoRecordsMap[recordId] = undoRecord
         recordId++
@@ -175,6 +181,17 @@ object UpdateMonitorHelper {
     @Suppress("unused")
     @JvmStatic
     fun playerStartRecording(player: ServerPlayerEntity) = playerStartRecording(player, PlayerData.UndoRecord.Cause.UNKNOWN)
+
+    @JvmStatic
+    fun playerStartRecording(
+        undoId: Long,
+        detailSupplier: () -> String
+    ) {
+        undoRecordsMap[undoId]?.player?.let {
+            playerStartRecording(it)
+        }
+    }
+
     @JvmStatic
     fun playerStartRecording(
         player: ServerPlayerEntity,
@@ -184,18 +201,18 @@ object UpdateMonitorHelper {
         if (!playerView.canRecord) return
         if (!playerView.isRecording) {
             playerView.isRecording = true
-            val record = addRecord(cause)
+            val record = addRecord(cause, player)
             playerView.undo.add(record)
             pushRecord(record.id) { "player recording/${player.entityName}/$cause" }
         }
     }
 
     @JvmStatic
-    fun playerStopRecording(player: ServerPlayerEntity) {
-        val playerView = player.data()
+    fun playerStopRecording() {
+        val playerView = recording?.player?.data() ?: error("No recording.")
         if (playerView.isRecording) {
             playerView.isRecording = false
-            popRecord { "player recording/${player.entityName}/${recording?.cause}" }
+            popRecord { "player recording/${recording!!.player.entityName}/${recording?.cause}" }
             playerView.redo
                 .onEach { removeRecord(it.id) }
                 .clear()
