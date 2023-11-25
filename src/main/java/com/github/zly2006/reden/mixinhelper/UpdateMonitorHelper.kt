@@ -160,7 +160,8 @@ object UpdateMonitorHelper {
      */
     private fun addRecord(
         cause: PlayerData.UndoRecord.Cause,
-        player: ServerPlayerEntity
+        player: ServerPlayerEntity,
+        message: (() -> String)?
     ): PlayerData.UndoRecord {
         if (undoRecords.size != 0) {
             throw IllegalStateException("Cannot add record when there is already one.")
@@ -169,7 +170,9 @@ object UpdateMonitorHelper {
             id = recordId,
             lastChangedTick = server.ticks,
             cause = cause,
-            player = player
+            player = player,
+            message = if (cause != PlayerData.UndoRecord.Cause.UNKNOWN || message == null) cause.message
+            else Text.literal(message())
         )
         undoRecordsMap[recordId] = undoRecord
         recordId++
@@ -178,17 +181,13 @@ object UpdateMonitorHelper {
 
     internal fun removeRecord(id: Long) = undoRecordsMap.remove(id)
 
-    @Suppress("unused")
-    @JvmStatic
-    fun playerStartRecording(player: ServerPlayerEntity) = playerStartRecording(player, PlayerData.UndoRecord.Cause.UNKNOWN)
-
     @JvmStatic
     fun playerStartRecording(
         undoId: Long,
         detailSupplier: () -> String
     ) {
         undoRecordsMap[undoId]?.player?.let {
-            playerStartRecording(it)
+            playerStartRecording(it, PlayerData.UndoRecord.Cause.UNKNOWN, detailSupplier)
         }
     }
 
@@ -196,12 +195,18 @@ object UpdateMonitorHelper {
     fun playerStartRecording(
         player: ServerPlayerEntity,
         cause: PlayerData.UndoRecord.Cause
+    ) = playerStartRecording(player, cause, null)
+
+    fun playerStartRecording(
+        player: ServerPlayerEntity,
+        cause: PlayerData.UndoRecord.Cause,
+        message: (() -> String)?
     ) {
         val playerView = player.data()
         if (!playerView.canRecord) return
         if (!playerView.isRecording) {
             playerView.isRecording = true
-            val record = addRecord(cause, player)
+            val record = addRecord(cause, player, message)
             playerView.undo.add(record)
             pushRecord(record.id) { "player recording/${player.entityName}/$cause" }
         }
@@ -209,7 +214,7 @@ object UpdateMonitorHelper {
 
     @JvmStatic
     fun playerStopRecording() {
-        val playerView = recording?.player?.data() ?: error("No recording.")
+        val playerView = recording?.player?.data() ?: return
         if (playerView.isRecording) {
             playerView.isRecording = false
             popRecord { "player recording/${recording!!.player.entityName}/${recording?.cause}" }

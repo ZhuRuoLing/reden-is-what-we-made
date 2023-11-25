@@ -62,6 +62,7 @@ class PlayerData(
     open class UndoRedoRecord(
         val id: Long,
         val player: ServerPlayerEntity,
+        val message: Text,
         var lastChangedTick: Int = 0,
         val entities: MutableMap<UUID, EntityEntry> = mutableMapOf(),
         val data: MutableMap<Long, Entry> = mutableMapOf()
@@ -105,13 +106,14 @@ ${data.map { "${BlockPos.fromLong(it.key).toShortString()} = ${it.value.state}" 
     class UndoRecord(
         id: Long,
         player: ServerPlayerEntity,
+        message: Text,
         lastChangedTick: Int = 0,
         entities: MutableMap<UUID, EntityEntry> = mutableMapOf(),
         data: MutableMap<Long, Entry> = mutableMapOf(),
         val cause: Cause = Cause.UNKNOWN,
-    ) : UndoRedoRecord(id, player, lastChangedTick, entities, data) {
+    ) : UndoRedoRecord(id, player, message, lastChangedTick, entities, data) {
         var notified = false
-        enum class Cause(message: Text) {
+        enum class Cause(val message: Text) {
             BREAK_BLOCK(Text.translatable("reden.feature.undo.cause.break_block")),
             USE_BLOCK(Text.translatable("reden.feature.undo.cause.use_block")),
             USE_ITEM(Text.translatable("reden.feature.undo.cause.use_item")),
@@ -125,11 +127,12 @@ ${data.map { "${BlockPos.fromLong(it.key).toShortString()} = ${it.value.state}" 
     class RedoRecord(
         id: Long,
         player: ServerPlayerEntity,
+        val undoRecord: UndoRecord,
+        message: Text = Text.literal("Redo: ").append(undoRecord.message),
         lastChangedTick: Int = 0,
         entities: MutableMap<UUID, EntityEntry> = mutableMapOf(),
         data: MutableMap<Long, Entry> = mutableMapOf(),
-        val undoRecord: UndoRecord
-    ): UndoRedoRecord(id, player, lastChangedTick, entities, data) {
+    ): UndoRedoRecord(id, player, message, lastChangedTick, entities, data) {
         override fun getMemorySize() = super.getMemorySize() + undoRecord.getMemorySize()
     }
 

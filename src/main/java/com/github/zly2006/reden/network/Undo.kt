@@ -18,6 +18,7 @@ import net.minecraft.entity.mob.MobEntity
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.tick.ChunkTickScheduler
 
@@ -35,6 +36,7 @@ class Undo(
             Undo(it.readVarInt())
         }
         private fun operate(world: ServerWorld, record: PlayerData.UndoRedoRecord, redoRecord: PlayerData.RedoRecord?) {
+            record.player.sendMessage(Text.literal("Undoing record ${record.id}, ").append(record.message))
             record.data.forEach { (posLong, entry) ->
                 val pos = BlockPos.fromLong(posLong)
                 debugLogger("undo ${BlockPos.fromLong(posLong)}, ${entry.state}")
@@ -128,7 +130,7 @@ class Undo(
                                     id = undoRecord.id,
                                     lastChangedTick = -1,
                                     undoRecord = undoRecord,
-                                    player = player
+                                    player = player,
                                 ).apply {
                                     data.putAll(undoRecord.data.keys.associateWith { posLong ->
                                         this.fromWorld( // add entity info to this redo record
