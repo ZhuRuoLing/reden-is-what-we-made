@@ -29,7 +29,7 @@ public class MixinTaskScheduler {
         IntegratedServer server = mc.getServer();
         if (mc.isIntegratedServerRunning() && server != null && MalilibSettingsKt.UNDO_SUPPORT_LITEMATICA_OPERATION.getBooleanValue()) {
             //noinspection DataFlowIssue
-            UpdateMonitorHelper.playerStartRecording(server.getPlayerManager().getPlayer(server.localPlayerUuid), PlayerData.UndoRecord.Cause.LITEMATICA_TASK);
+            UpdateMonitorHelper.playerStartRecording(server.getPlayerManager().getPlayer(server.localPlayerUuid), PlayerData.Cause.LITEMATICA_TASK);
         }
     }
     @Inject(

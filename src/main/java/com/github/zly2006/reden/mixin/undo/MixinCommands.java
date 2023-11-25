@@ -36,7 +36,7 @@ public class MixinCommands {
     )
     private void onExecute(ParseResults<ServerCommandSource> parseResults, String command, CallbackInfoReturnable<Integer> cir) {
         if (parseResults.getContext().getSource().getEntity() instanceof ServerPlayerEntity player) {
-            UpdateMonitorHelper.playerStartRecording(player, PlayerData.UndoRecord.Cause.COMMAND);
+            UpdateMonitorHelper.playerStartRecording(player, PlayerData.Cause.COMMAND);
         }
     }
 

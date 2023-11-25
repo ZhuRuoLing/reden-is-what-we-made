@@ -113,16 +113,6 @@ ${data.map { "${BlockPos.fromLong(it.key).toShortString()} = ${it.value.state}" 
         val cause: Cause = Cause.UNKNOWN,
     ) : UndoRedoRecord(id, player, message, lastChangedTick, entities, data) {
         var notified = false
-        enum class Cause(val message: Text) {
-            BREAK_BLOCK(Text.translatable("reden.feature.undo.cause.break_block")),
-            USE_BLOCK(Text.translatable("reden.feature.undo.cause.use_block")),
-            USE_ITEM(Text.translatable("reden.feature.undo.cause.use_item")),
-            USE_ENTITY(Text.translatable("reden.feature.undo.cause.use_entity")),
-            ATTACK_ENTITY(Text.translatable("reden.feature.undo.cause.attack_entity")),
-            COMMAND(Text.translatable("reden.feature.undo.cause.command")),
-            LITEMATICA_TASK(Text.translatable("reden.feature.undo.cause.litematica_task")),
-            UNKNOWN(Text.translatable("reden.feature.undo.cause.unknown"))
-        }
     }
     class RedoRecord(
         id: Long,
@@ -157,5 +147,18 @@ ${data.map { "${BlockPos.fromLong(it.key).toShortString()} = ${it.value.state}" 
         override val pos: BlockPos = BlockPos.ORIGIN
 
         override fun toString() = "NotExistEntityEntry"
+    }
+
+    class Cause(val message: Text) {
+        companion object {
+            @JvmField val BREAK_BLOCK = Cause(Text.translatable("reden.feature.undo.cause.break_block"))
+            @JvmField val USE_BLOCK = Cause(Text.translatable("reden.feature.undo.cause.use_block"))
+            @JvmField val USE_ITEM = Cause(Text.translatable("reden.feature.undo.cause.use_item"))
+            @JvmField val USE_ENTITY = Cause(Text.translatable("reden.feature.undo.cause.use_entity"))
+            @JvmField val ATTACK_ENTITY = Cause(Text.translatable("reden.feature.undo.cause.attack_entity"))
+            @JvmField val COMMAND = Cause(Text.translatable("reden.feature.undo.cause.command"))
+            @JvmField val LITEMATICA_TASK = Cause(Text.translatable("reden.feature.undo.cause.litematica_task"))
+            @JvmField val UNKNOWN = Cause(Text.translatable("reden.feature.undo.cause.unknown"))
+        }
     }
 }

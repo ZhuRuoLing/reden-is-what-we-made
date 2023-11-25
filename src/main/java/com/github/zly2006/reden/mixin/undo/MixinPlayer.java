@@ -26,7 +26,7 @@ public class MixinPlayer {
     )
     private void onAttack(Entity target, CallbackInfo ci) {
         if (RedenCarpetSettings.Options.undoEntities) {
-            UpdateMonitorHelper.playerStartRecording(networkHandler.player, PlayerData.UndoRecord.Cause.ATTACK_ENTITY);
+            UpdateMonitorHelper.playerStartRecording(networkHandler.player, PlayerData.Cause.ATTACK_ENTITY);
         }
     }
     @Inject(

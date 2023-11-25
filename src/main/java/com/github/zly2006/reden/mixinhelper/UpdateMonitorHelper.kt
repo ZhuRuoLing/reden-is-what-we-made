@@ -159,7 +159,7 @@ object UpdateMonitorHelper {
      * 此缓存可能在没有确认的情况下不经检查直接调用
      */
     private fun addRecord(
-        cause: PlayerData.UndoRecord.Cause,
+        cause: PlayerData.Cause,
         player: ServerPlayerEntity,
         message: (() -> String)?
     ): PlayerData.UndoRecord {
@@ -171,7 +171,7 @@ object UpdateMonitorHelper {
             lastChangedTick = server.ticks,
             cause = cause,
             player = player,
-            message = if (cause != PlayerData.UndoRecord.Cause.UNKNOWN || message == null) cause.message
+            message = if (cause != PlayerData.Cause.UNKNOWN || message == null) cause.message
             else Text.literal(message())
         )
         undoRecordsMap[recordId] = undoRecord
@@ -187,19 +187,19 @@ object UpdateMonitorHelper {
         detailSupplier: () -> String
     ) {
         undoRecordsMap[undoId]?.player?.let {
-            playerStartRecording(it, PlayerData.UndoRecord.Cause.UNKNOWN, detailSupplier)
+            playerStartRecording(it, PlayerData.Cause.UNKNOWN, detailSupplier)
         }
     }
 
     @JvmStatic
     fun playerStartRecording(
         player: ServerPlayerEntity,
-        cause: PlayerData.UndoRecord.Cause
+        cause: PlayerData.Cause
     ) = playerStartRecording(player, cause, null)
 
     fun playerStartRecording(
         player: ServerPlayerEntity,
-        cause: PlayerData.UndoRecord.Cause,
+        cause: PlayerData.Cause,
         message: (() -> String)?
     ) {
         val playerView = player.data()

@@ -22,7 +22,7 @@ public abstract class MixinServerPlayNetworkHandler implements PlayerInteractEnt
     @Inject(method = "interact(Lnet/minecraft/util/Hand;)V", at = @At(value = "HEAD"))
     public void beforePlayerUseEntity(Hand hand, CallbackInfo info) {
         if (RedenCarpetSettings.Options.undoEntities) {
-            UpdateMonitorHelper.playerStartRecording(field_28963.player, PlayerData.UndoRecord.Cause.USE_ENTITY);
+            UpdateMonitorHelper.playerStartRecording(field_28963.player, PlayerData.Cause.USE_ENTITY);
         }
     }
 
