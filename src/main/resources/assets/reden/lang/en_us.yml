@@ -76,6 +76,7 @@ reden:
         attack_entity: Attack Entity
         command: Command
         litematica_task: Litematica Task
+        chain: 'Chain reaction caused by %1$s'
         unknown: Unknown
 
   message:

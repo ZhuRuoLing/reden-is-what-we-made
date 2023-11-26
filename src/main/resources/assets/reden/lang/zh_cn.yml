@@ -76,6 +76,7 @@ reden:
         attack_entity: 攻击实体
         command: 命令
         litematica_task: Litematica 任务
+        chain: '%1$s引发的连锁反应'
         unknown: 未知
 
   message:

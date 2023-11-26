@@ -112,19 +112,8 @@ object UpdateMonitorHelper {
         }
         return undoRecords.removeLast()
     }
-    data class Changed(
-        val record: PlayerData.UndoRecord,
-        val pos: BlockPos
-    )
-    var lastTickChanged: MutableSet<Changed> = hashSetOf(); private set
-    var thisTickChanged: MutableSet<Changed> = hashSetOf(); private set
+    val thisTickRecords: MutableMap<ServerPlayerEntity, PlayerData.UndoRecord> = hashMapOf()
     val recording: PlayerData.UndoRecord? get() = undoRecords.lastOrNull()?.record
-    enum class LifeTime {
-        PERMANENT,
-        TICK,
-        CHAIN,
-        ONCE
-    }
 
     private var suggestedUndo = iEVER_USED_UNDO.booleanValue
     @JvmStatic
@@ -176,6 +165,7 @@ object UpdateMonitorHelper {
         )
         undoRecordsMap[recordId] = undoRecord
         recordId++
+        player.data().undo.add(undoRecord)
         return undoRecord
     }
 
@@ -186,8 +176,13 @@ object UpdateMonitorHelper {
         undoId: Long,
         detailSupplier: () -> String
     ) {
-        undoRecordsMap[undoId]?.player?.let {
-            playerStartRecording(it, PlayerData.Cause.UNKNOWN, detailSupplier)
+        undoRecordsMap[undoId]?.let {
+            playerStartRecording(
+                it.player,
+                PlayerData.Cause.Chain(it.cause, it.id),
+                true,
+                detailSupplier
+            )
         }
     }
 
@@ -195,20 +190,29 @@ object UpdateMonitorHelper {
     fun playerStartRecording(
         player: ServerPlayerEntity,
         cause: PlayerData.Cause
-    ) = playerStartRecording(player, cause, null)
+    ) = playerStartRecording(player, cause, false, null)
 
     fun playerStartRecording(
         player: ServerPlayerEntity,
         cause: PlayerData.Cause,
+        reuseRecord: Boolean,
         message: (() -> String)?
     ) {
         val playerView = player.data()
         if (!playerView.canRecord) return
         if (!playerView.isRecording) {
             playerView.isRecording = true
-            val record = addRecord(cause, player, message)
-            playerView.undo.add(record)
-            pushRecord(record.id) { "player recording/${player.entityName}/$cause" }
+            val record = if (reuseRecord) {
+                if (player in thisTickRecords) {
+                    thisTickRecords[player]!!
+                } else {
+                    addRecord(cause, player, message)
+                        .apply { thisTickRecords[player] = this }
+                }
+            } else {
+                addRecord(cause, player, message)
+            }
+            pushRecord(record.id) { "player recording/${player.entityName}/${cause.message.string}" }
         }
     }
 
@@ -217,7 +221,7 @@ object UpdateMonitorHelper {
         val playerView = recording?.player?.data() ?: return
         if (playerView.isRecording) {
             playerView.isRecording = false
-            popRecord { "player recording/${recording!!.player.entityName}/${recording?.cause}" }
+            popRecord { undoRecords.last().reason }
             playerView.redo
                 .onEach { removeRecord(it.id) }
                 .clear()
@@ -270,8 +274,7 @@ object UpdateMonitorHelper {
     init {
         ServerPlayConnectionEvents.DISCONNECT.register { handler, _ -> playerQuit(handler.player) }
         ServerTickEvents.START_SERVER_TICK.register {
-            lastTickChanged = thisTickChanged
-            thisTickChanged = hashSetOf()
+            thisTickRecords.clear()
         }
     }
 }

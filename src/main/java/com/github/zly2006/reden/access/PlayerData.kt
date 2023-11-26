@@ -149,7 +149,7 @@ ${data.map { "${BlockPos.fromLong(it.key).toShortString()} = ${it.value.state}" 
         override fun toString() = "NotExistEntityEntry"
     }
 
-    class Cause(val message: Text) {
+    open class Cause(val message: Text) {
         companion object {
             @JvmField val BREAK_BLOCK = Cause(Text.translatable("reden.feature.undo.cause.break_block"))
             @JvmField val USE_BLOCK = Cause(Text.translatable("reden.feature.undo.cause.use_block"))
@@ -159,6 +159,12 @@ ${data.map { "${BlockPos.fromLong(it.key).toShortString()} = ${it.value.state}" 
             @JvmField val COMMAND = Cause(Text.translatable("reden.feature.undo.cause.command"))
             @JvmField val LITEMATICA_TASK = Cause(Text.translatable("reden.feature.undo.cause.litematica_task"))
             @JvmField val UNKNOWN = Cause(Text.translatable("reden.feature.undo.cause.unknown"))
+        }
+
+        class Chain(val cause: Cause, private val causeId: Long): Cause(
+            Text.translatable("reden.feature.undo.cause.chain", cause.message, causeId)
+        ) {
+            override fun toString() = "Chain(${cause.message.string}/$causeId)"
         }
     }
 }
