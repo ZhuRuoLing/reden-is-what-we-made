@@ -149,7 +149,7 @@ ${data.map { "${BlockPos.fromLong(it.key).toShortString()} = ${it.value.state}" 
         override fun toString() = "NotExistEntityEntry"
     }
 
-    open class Cause(val message: Text) {
+    open class Cause(open val message: Text) {
         companion object {
             @JvmField val BREAK_BLOCK = Cause(Text.translatable("reden.feature.undo.cause.break_block"))
             @JvmField val USE_BLOCK = Cause(Text.translatable("reden.feature.undo.cause.use_block"))

@@ -3,7 +3,7 @@ package com.github.zly2006.reden.sponsor
 import com.github.zly2006.reden.Reden
 import com.github.zly2006.reden.utils.isClient
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import net.minecraft.client.MinecraftClient
 import okhttp3.*
@@ -25,9 +25,6 @@ var sponsors: List<Sponsor>? = null
     get() = if (time + 1000 * 60 < System.currentTimeMillis()) null else field
     private set
 private var time = 0L
-val x by lazy {
-    8
-}
 
 fun updateSponsors() {
     Logger.getLogger(OkHttpClient::class.java.getName()).setLevel(Level.FINE)
@@ -53,7 +50,7 @@ fun updateSponsors() {
 
         override fun onResponse(call: Call, response: Response) {
             if (response.code == 200) {
-                sponsors = Json.decodeFromString(ListSerializer(Sponsor.serializer()), response.body!!.string())
+                sponsors = Json.decodeFromString<List<Sponsor>>(response.body!!.string())
                     .sortedBy { -it.amount }
                 Reden.LOGGER.info("Updated sponsors.")
                 time = System.currentTimeMillis()

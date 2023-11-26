@@ -61,6 +61,8 @@ class Hello(
                                     when (packet.status) {
                                         0 -> translateMessage("undo", "rollback_success")
                                         1 -> translateMessage("undo", "restore_success")
+                                        256 -> translateMessage("undo", "undo_chain_success")
+
                                         2 -> translateMessage("undo", "no_blocks_info")
                                         16 -> translateMessage("undo", "no_permission")
                                         32 -> translateMessage("undo", "not_recording")

@@ -37,6 +37,15 @@ class Undo(
         }
         private fun operate(world: ServerWorld, record: PlayerData.UndoRedoRecord, redoRecord: PlayerData.RedoRecord?) {
             record.player.sendMessage(Text.literal("Undoing record ${record.id}, ").append(record.message))
+            if (redoRecord != null) {
+                redoRecord.data.putAll(record.data.keys.associateWith { posLong ->
+                    redoRecord.fromWorld( // add entity info to this redo record
+                        world,
+                        BlockPos.fromLong(posLong),
+                        false
+                    )
+                })
+            }
             record.data.forEach { (posLong, entry) ->
                 val pos = BlockPos.fromLong(posLong)
                 debugLogger("undo ${BlockPos.fromLong(posLong)}, ${entry.state}")
@@ -125,23 +134,7 @@ class Undo(
                         view.undo.removeLast()
                         UpdateMonitorHelper.removeRecord(undoRecord.id) // no longer monitoring rollbacked record
                         server.execute {
-                            view.redo.add(
-                                PlayerData.RedoRecord(
-                                    id = undoRecord.id,
-                                    lastChangedTick = -1,
-                                    undoRecord = undoRecord,
-                                    player = player,
-                                ).apply {
-                                    data.putAll(undoRecord.data.keys.associateWith { posLong ->
-                                        this.fromWorld( // add entity info to this redo record
-                                            player.world,
-                                            BlockPos.fromLong(posLong),
-                                            true
-                                        )
-                                    })
-                                    entities.clear()
-                                }
-                            )
+                            view.redo.add(PlayerData.RedoRecord(undoRecord.id, player, undoRecord, lastChangedTick = -1))
                             operate(player.serverWorld, undoRecord, view.redo.last())
                             sendStatus(0)
                         }
@@ -154,6 +147,20 @@ class Undo(
                             view.undo.add(it.undoRecord)
                             sendStatus(1)
                         }
+                    } ?: sendStatus(2)
+
+                    256 -> view.undo.lastValid()?.let {
+                        val undoList = mutableListOf<PlayerData.UndoRecord>()
+                        while (view.undo.isNotEmpty() && view.undo.lastValid()?.cause is PlayerData.Cause.Chain)
+                            undoList.add(view.undo.removeLast())
+                        undoList.add(view.undo.removeLast())
+                        UpdateMonitorHelper.removeRecord(undoList.first().id) // no longer monitoring rollbacked record
+                        TODO()
+                        undoList.forEach { undoRecord ->
+                            view.redo.add(PlayerData.RedoRecord(undoRecord.id, player, undoRecord, lastChangedTick = -1))
+                            operate(player.serverWorld, undoRecord, view.redo.last())
+                        }
+                        sendStatus(256)
                     } ?: sendStatus(2)
 
                     else -> sendStatus(65536)

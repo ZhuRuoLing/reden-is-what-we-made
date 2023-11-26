@@ -37,18 +37,18 @@ fun configureKeyCallbacks(mc: MinecraftClient) {
         true
     }
     var undoEasterEggLock = false
-    UNDO_KEY.keybind.setCallback { _, _ ->
+    fun undoCallback(packet: Undo, featureName: String): Boolean {
         if (undoEasterEggLock) {
             mc.player?.sendMessage(translateMessage("undo", "busy"))
-            return@setCallback false
+            return false
         }
         if (mc.serverData()?.featureSet?.contains("undo") != true) {
             mc.player?.sendMessage(Text.literal("Sorry, this server doesn't support undo.").red(), true)
-            return@setCallback false
+            return false
         }
         if (mc.interactionManager?.currentGameMode != GameMode.CREATIVE)
-            return@setCallback false
-        onFunctionUsed("undo")
+            return false
+        onFunctionUsed(featureName)
         iEVER_USED_UNDO.booleanValue = true
         val playSound = Random.nextInt(100) < EASTER_EGG_RATE.integerValue
         if (playSound) {
@@ -62,12 +62,18 @@ fun configureKeyCallbacks(mc: MinecraftClient) {
             Thread {
                 Thread.sleep(2000)
                 undoEasterEggLock = false
-                ClientPlayNetworking.send(Undo(0))
+                ClientPlayNetworking.send(packet)
             }.start()
         }
         else
-            ClientPlayNetworking.send(Undo(0))
-        true
+            ClientPlayNetworking.send(packet)
+        return true
+    }
+    UNDO_KEY.keybind.setCallback { _, _ ->
+        undoCallback(Undo(0), "undo.once")
+    }
+    UNDO_CHAIN_KEY.keybind.setCallback { _, _ ->
+        undoCallback(Undo(256), "undo.chain")
     }
     REDO_KEY.keybind.setCallback { _, _ ->
         onFunctionUsed("redo")
